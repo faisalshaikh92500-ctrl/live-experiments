@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L E - Live Experiments</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fc;color:#17233b}
+header{background:#102c54;color:white;padding:23px 18px;border-radius:0 0 24px 24px}
+header h1{margin:0;font-size:29px}
+header p{margin:8px 0 0;color:#d9e8ff}
+main{padding:16px;max-width:650px;margin:auto}
+.search{width:100%;padding:14px;border:1px solid #d8e0ed;border-radius:12px;font-size:16px;margin-bottom:15px}
+h2{font-size:20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+button{cursor:pointer;border:0;border-radius:10px;padding:11px 13px;font-size:14px}
+.tab{background:white;color:#17365f;border:1px solid #dce4f0}
+.tab.active,.primary{background:#1769e0;color:white}
+.card{background:white;padding:16px;border-radius:16px;margin:12px 0;box-shadow:0 3px 12px #1b31500c}
+.card h3{margin:5px 0 8px}
+.card p{color:#58677d;line-height:1.5;font-size:14px}
+.tag{font-size:12px;background:#eaf2ff;color:#1756a6;padding:5px 8px;border-radius:20px}
+.full{width:100%;margin-top:8px}
+.result{background:#eaf8f0;padding:12px;border-radius:10px;line-height:1.5;margin-top:10px}
+textarea{width:100%;min-height:110px;border:1px solid #d8e0ed;border-radius:10px;padding:12px;font:15px Arial}
+footer{text-align:center;color:#69778c;font-size:12px;padding:25px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔬 L E</h1>
+  <p>Live Experiments · Science ko karke seekho!</p>
+</header>
+<main>
+  <div class="card">
+    <b>Namaste, Scientist! 👋</b>
+    <p>Physics, Chemistry aur Biology ke virtual practicals explore karo.</p>
+  </div>
+
+  <input id="search" class="search" placeholder="🔍 Practical search karo..." oninput="render()">
+
+  <h2>📚 Subject chuno</h2>
+  <div class="tabs">
+    <button class="tab active" onclick="setSubject('All',this)">Sabhi</button>
+    <button class="tab" onclick="setSubject('Physics',this)">⚡ Physics</button>
+    <button class="tab" onclick="setSubject('Chemistry',this)">🧪 Chemistry</button>
+    <button class="tab" onclick="setSubject('Biology',this)">🌱 Biology</button>
+  </div>
+
+  <h2>🧑‍🔬 Virtual Practical Lab</h2>
+  <div id="experiments"></div>
+
+  <section class="card">
+    <h2>📝 Meri Practical Notebook</h2>
+    <p>Apne practical ke observations aur notes yahan likho.</p>
+    <input id="noteTitle" class="search" placeholder="Practical ka naam">
+    <textarea id="notes" placeholder="Aim, observation aur conclusion..."></textarea>
+    <button class="primary full" onclick="saveNote()">Notes save karo</button>
+    <div id="savedNotes"></div>
+  </section>
+
+  <section class="card">
+    <h2>📌 Zaroori baat</h2>
+    <p>Yeh learning prototype hai. Practical demonstrations simulated hain, real laboratory ya live video stream nahi. Chemicals ya equipment ko teacher ki supervision ke bina use na karein.</p>
+  </section>
+</main>
+<footer>L E · Learn by Experimenting · Student Prototype</footer>
+
+<script>
+const experiments=[
+ {subject:"Physics",icon:"⚡",name:"Ohm's Law",desc:"Voltage aur current ke sambandh ko samjho.",aim:"Voltage badhne par, constant resistance mein current bhi badhta hai.",steps:"1. Voltage ka maan chuno.\n2. Resistance ko constant rakho.\n3. I = V/R se current calculate karo.",kind:"ohm"},
+ {subject:"Physics",icon:"🔭",name:"Lens aur Image",desc:"Convex lens se image formation ka concept.",aim:"Image ki position object distance aur focal length par nirbhar karti hai.",steps:"1. Object aur lens ki position samjho.\n2. Ray diagram banao.\n3. Image ke gun note karo.",kind:"lens"},
+ {subject:"Chemistry",icon:"🧪",name:"pH Scale",desc:"Acidic, neutral aur basic solutions.",aim:"pH 7 se kam acidic, 7 neutral aur 7 se zyada basic hota hai.",steps:"1. Sample ka diya hua pH dekho.\n2. pH scale par position pehchano.\n3. Classification note karo.",kind:"ph"},
+ {subject:"Chemistry",icon:"⚗️",name:"Reaction Explorer",desc:"Chemical equations aur reactions seekho.",aim:"Chemical reaction mein atoms rearrange hote hain.",steps:"1. Reactants aur products pehchano.\n2. Equation mein atoms gino.\n3. Balanced equation ka matlab samjho.",kind:"reaction"},
+ {subject:"Biology",icon:"🌱",name:"Plant Cell",desc:"Plant cell ke parts aur unke functions.",aim:"Cell wall, cell membrane, nucleus aur chloroplast ke roles samjho.",steps:"1. Cell ka diagram dekho.\n2. Organelles label karo.\n3. Unke functions likho.",kind:"cell"},
+ {subject:"Biology",icon:"🔬",name:"Microscope Basics",desc:"Microscope ki magnification samjho.",aim:"Total magnification = eyepiece magnification × objective magnification.",steps:"1. Dono magnification values dekho.\n2. Unhe multiply karo.\n3. Total magnification note karo.",kind:"scope"}
+];
+let subject="All";
+function setSubject(s,btn){
+ subject=s;
+ document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ render();
+}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const list=experiments.filter(e=>(subject==="All"||e.subject===subject)&&(e.name+" "+e.subject+" "+e.desc).toLowerCase().includes(q));
+ document.getElementById("experiments").innerHTML=list.length?list.map(e=>`
+ <article class="card">
+ <span class="tag">${e.subject}</span>
+ <h3>${e.icon} ${e.name}</h3><p>${e.desc}</p>
+ <button class="primary full" onclick="openLab('${e.kind}')">Practical kholo →</button>
+ <div id="lab-${e.kind}"></div>
+ </article>`).join(""):"<div class='card'>Koi practical nahi mila. Doosra search try karo.</div>";
+}
+function openLab(kind){
+ const e=experiments.find(x=>x.kind===kind);
+ const box=document.getElementById("lab-"+kind);
+ if(!box)return;
+ if(box.innerHTML){box.innerHTML="";return;}
+ let extra="";
+ if(kind==="ohm")extra=`<label>Voltage: <b id="vval">6</b> V</label><input type="range" min="1" max="12" value="6" oninput="calcCurrent(this.value)"><p>Resistance: 3 Ω</p><div id="current" class="result">Current = 2 A</div>`;
+ if(kind==="ph")extra=`<label>Sample pH chuno</label><input type="range" min="1" max="14" value="7" oninput="calcPH(this.value)"><div id="phval" class="result">pH 7: Neutral</div>`;
+ if(kind==="lens")extra=`<div class="result">Convex lens: object focal length ke bahar ho to image object ki position ke hisaab se real ya virtual ho sakti hai. Ray diagram se verify karo.</div>`;
+ if(kind==="reaction")extra=`<div class="result">Example: 2H₂ + O₂ → 2H₂O<br>Atoms dono taraf barabar hain: H = 4, O = 2.</div>`;
+ if(kind==="cell")extra=`<div class="result">Cell wall: support · Nucleus: cell activities · Chloroplast: photosynthesis · Cell membrane: substances ka movement.</div>`;
+ if(kind==="scope")extra=`<div class="result">Example: eyepiece 10× aur objective 40× → total magnification = 400×.</div>`;
+ box.innerHTML=`<div class="card"><b>🎯 Aim</b><p>${e.aim}</p><b>📋 Steps</b><p style="white-space:pre-line">${e.steps}</p>${extra}<p><b>Conclusion:</b> Apne observation ko notebook mein likho.</p></div>`;
+}
+function calcCurrent(v){
+ document.getElementById("vval").textContent=v;
+ document.getElementById("current").textContent="Current = "+(v/3).toFixed(2)+" A (I = V/R)";
+}
+function calcPH(v){
+ let t=v<7?"Acidic":v==7?"Neutral":"Basic";
+ document.getElementById("phval").textContent="pH "+v+": "+t;
+}
+function saveNote(){
+ const title=document.getElementById("noteTitle").value.trim();
+ const text=document.getElementById("notes").value.trim();
+ if(!title||!text){alert("Practical ka naam aur notes dono likho.");return;}
+ let arr=[];
+ try{arr=JSON.parse(localStorage.getItem("leNotes")||"[]")}catch(e){}
+ arr.push({title,text});
+ try{localStorage.setItem("leNotes",JSON.stringify(arr));}
+ catch(e){alert("Browser storage available nahi hai. Notes copy karke alag save kar lo.");return;}
+ document.getElementById("noteTitle").value="";
+ document.getElementById("notes").value="";
+ showNotes();
+}
+function showNotes(){
+ let arr=[];
+ try{arr=JSON.parse(localStorage.getItem("leNotes")||"[]")}catch(e){}
+ document.getElementById("savedNotes").innerHTML=arr.map(n=>`<div class="result"><b>${escapeHTML(n.title)}</b><p>${escapeHTML(n.text)}</p></div>`).join("");
+}
+function escapeHTML(s){
+ return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+render();showNotes();
+</script>
+</body>
+</html>
